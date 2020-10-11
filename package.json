@@ -1,0 +1,22 @@
+{
+  "name": "artclub",
+  "version": "1.0.0",
+  "description": "artclub",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vitalikv/artclub.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/vitalikv/artclub/issues"
+  },
+  "homepage": "https://github.com/vitalikv/artclub#readme",
+  "dependencies": {
+    "three": "^0.121.1"
+  }
+}
