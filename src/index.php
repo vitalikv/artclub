@@ -19,6 +19,13 @@
 		
 		<div nameId="rightBlock" style="display: block; position: absolute; right: 50px; bottom: 80px; border:solid 1px #b3b3b3; background: #f5f5f5; z-index: 1;">
 
+			<div style="margin-top: 15px; font:12px Arial, Helvetica, sans-serif; color: #737373;">						
+				<div nameId="txt_toneMapping" style="text-align:center;">
+					toneMapping 1
+				</div>
+				<input type="range" nameId="input_toneMapping" min="0" max="4" value="1" step="0.1">
+			</div>
+					
 			<div style="margin-top: 15px; font:12px Arial, Helvetica, sans-serif; color: #737373;">
 				<div nameId="txt_dirLight" style="text-align:center;">
 					lightIntensity 1

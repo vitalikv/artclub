@@ -88,7 +88,7 @@ function init() {
 		let cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 512, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter } );
 		let gCubeCam = new THREE.CubeCamera(0.1, 10, cubeRenderTarget);
 		gCubeCam.update( renderer, scene );
-
+		gCubeCam.renderTarget.texture.outputEncoding = THREE.sRGBEncoding;
 
 		gltf.scene.scale.set(0.1, 0.1, 0.1);
 		
@@ -119,7 +119,7 @@ function init() {
 	},
 	function ( xhr ) {
 
-		console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+		//console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
 
 	});
 	
@@ -199,7 +199,10 @@ function setElemRP()
 	//input3.ontouchmove = function(e){ inputEnvMapIntensity({value: input3.value});  }
 
 	let input4 = document.querySelector('[nameId="input_dirLight"]');
-	input4.onmousemove = function(e) { inputDirLight({value: input4.value}); }	
+	input4.onmousemove = function(e) { inputDirLight({value: input4.value}); }
+
+	let input5 = document.querySelector('[nameId="input_toneMapping"]');
+	input5.onmousemove = function(e) { setToneMapping({value: input5.value}); }	
 }
 
 
@@ -279,4 +282,29 @@ function inputDirLight(params)
 	
 	render();	
 }
+
+
+
+function setToneMapping(params)
+{
+	let value = params.value;						
+	
+	let input = document.querySelector('[nameId="input_toneMapping"]');
+	input.value = value;
+	
+	let elem = document.querySelector('[nameId="txt_toneMapping"]');
+	elem.innerText = 'toneMapping '+ value;	
+	
+	renderer.toneMappingExposure = value;					
+	
+	render();	
+}
+
+
+
+
+
+
+
+
 
