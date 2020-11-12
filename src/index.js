@@ -58,7 +58,7 @@ function init() {
 	camera.position.set( 0, 1, 5 );
 	
 	scene = new THREE.Scene();
-	scene.background = new THREE.Color( 0xffffff );
+	scene.background = new THREE.Color( 0x4f5152 );
 	
 	let dirLight = new THREE.DirectionalLight( 0xffffff, 1.0 );
 	dirLight.castShadow = true;
@@ -68,61 +68,73 @@ function init() {
 	infProg.dirLight = dirLight;
 	
 	let dirLightHelper = new THREE.DirectionalLightHelper( dirLight, 10, 0xff0000 );
-	scene.add( dirLightHelper );	
-	
-	if(1==2)
-	{
-		var geometry = new THREE.BoxGeometry( 0.5, 3, 0.5 );
-		var material = new THREE.MeshBasicMaterial( {color: 0x00ff00} );
-		var cube = new THREE.Mesh( geometry, material );
-		cube.castShadow = true;	
-		cube.receiveShadow = true;	
-		cube.position.z = 1;
-		scene.add( cube );	
-	}	
+	scene.add( dirLightHelper );		
+			
+	new RGBELoader()
+		.setDataType( THREE.UnsignedByteType )
+		.setPath( 'textures/' )
+		.load( 'sculpture_exhibition_2k.hdr', function ( texture ) {
+
+			var envMap = pmremGenerator.fromEquirectangular( texture ).texture;
+
+			//scene.background = envMap;
+			scene.environment = envMap;
+
+			texture.dispose();
+			pmremGenerator.dispose();
+
+			render();
+
+			// model
+
+			// use of RoughnessMipmapper is optional
+			let roughnessMipmapper = new RoughnessMipmapper( renderer );			
+			
+			let loader = new GLTFLoader().setPath( 'model/' );
+			loader.load( 'scene.gltf', function ( gltf ) {
+				
+				let cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 512, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter } );
+				let gCubeCam = new THREE.CubeCamera(0.1, 10, cubeRenderTarget);
+				gCubeCam.update( renderer, scene );
+				gCubeCam.renderTarget.texture.outputEncoding = THREE.sRGBEncoding;
+
+				gltf.scene.scale.set(0.1, 0.1, 0.1);
+				
+				infProg.scene = gltf.scene;
+				
+				gltf.scene.traverse( function ( child ) {
+
+					if ( child.isMesh ) {
+						child.castShadow = true;	
+						child.receiveShadow = true;	
+						//child.material.envMap = gCubeCam.renderTarget.texture;
+						child.material.needsUpdate = true;	
+
+						addMaterialObjToList({material: child.material});
+					}
+
+				} );
+
+
+				let elemLoad = document.querySelector('[nameId="progress_wrap"]');
+				elemLoad.style.display = "none";
+				
+				scene.add( gltf.scene );
+				
+				roughnessMipmapper.dispose();
+				
+				setDefaultMaterial();
+
+				render();
+			},
+			function ( xhr ) {
+
+				//console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+			});
 			
 
-	let loader = new GLTFLoader().setPath( 'model/' );
-	loader.load( 'scene.gltf', function ( gltf ) {
-		
-		let cubeRenderTarget = new THREE.WebGLCubeRenderTarget( 512, { generateMipmaps: true, minFilter: THREE.LinearMipmapLinearFilter } );
-		let gCubeCam = new THREE.CubeCamera(0.1, 10, cubeRenderTarget);
-		gCubeCam.update( renderer, scene );
-		gCubeCam.renderTarget.texture.outputEncoding = THREE.sRGBEncoding;
-
-		gltf.scene.scale.set(0.1, 0.1, 0.1);
-		
-		infProg.scene = gltf.scene;
-		
-		gltf.scene.traverse( function ( child ) {
-
-			if ( child.isMesh ) {
-	 			child.castShadow = true;	
-	 			child.receiveShadow = true;	
-				child.material.envMap = gCubeCam.renderTarget.texture;
-				child.material.needsUpdate = true;	
-
-				addMaterialObjToList({material: child.material});
-			}
-
-		} );
-
-
-		let elemLoad = document.querySelector('[nameId="progress_wrap"]');
-		elemLoad.style.display = "none";
-		
-		scene.add( gltf.scene );
-		
-		setDefaultMaterial();
-
-		render();
-	},
-	function ( xhr ) {
-
-		//console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
-
-	});
-	
+		} );						
 	
 
 	renderer = new THREE.WebGLRenderer( { antialias: true } );
@@ -136,6 +148,9 @@ function init() {
 	renderer.shadowMap.type = THREE.PCFSoftShadowMap; 
 	
 	container.appendChild( renderer.domElement );
+	
+	var pmremGenerator = new THREE.PMREMGenerator( renderer );
+	pmremGenerator.compileEquirectangularShader();	
 
 	renderer.domElement.style.width = '100%';
 	renderer.domElement.style.height = '100%';
@@ -176,10 +191,11 @@ function setDefaultMaterial()
 {
 	if(infProg.material.length == 0) return;
 	
-	inputMetalness({value: infProg.material[0].metalness});
+	inputMetalness({value: 0.96});
 	inputRoughness({value: infProg.material[0].roughness});
 	inputEnvMapIntensity({value: infProg.material[0].envMapIntensity});
-	inputDirLight({value: 1});
+	inputDirLight({value: 3.27});
+	setToneMapping({value: 1.1});
 }
 
 
@@ -188,15 +204,12 @@ function setElemRP()
 {
 	let input1 = document.querySelector('[nameId="input_metalness"]');
 	input1.onmousemove = function(e) { inputMetalness({value: input1.value}); };	
-	//input1.ontouchmove = function(e){ inputMetalness({value: input1.value});  }
 	
 	let input2 = document.querySelector('[nameId="input_roughness"]');
 	input2.onmousemove = function(e) { inputRoughness({value: input2.value}); }	
-	//input2.ontouchmove = function(e){ inputRoughness({value: input2.value});  }
 
 	let input3 = document.querySelector('[nameId="input_envMapIntensity"]');
 	input3.onmousemove = function(e) { inputEnvMapIntensity({value: input3.value}); }	
-	//input3.ontouchmove = function(e){ inputEnvMapIntensity({value: input3.value});  }
 
 	let input4 = document.querySelector('[nameId="input_dirLight"]');
 	input4.onmousemove = function(e) { inputDirLight({value: input4.value}); }
